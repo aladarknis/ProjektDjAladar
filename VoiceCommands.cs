@@ -292,5 +292,70 @@ namespace ProjektDjAladar
 
             await ctx.Message.RespondAsync($"Paused playback");
         }
+
+
+
+
+
+        [Command("imdj"), Description("Plays an audio file from YouTube")]
+        public async Task ImDj(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
+        {
+            var vnext = ctx.Client.GetVoiceNext();
+            if (vnext == null)
+            {
+                // not enabled
+                await ctx.RespondAsync("VNext is not enabled or configured.");
+                return;
+            }
+
+            // check whether we aren't already connected
+            var vnc = vnext.GetConnection(ctx.Guild);
+            if (vnc == null)
+            {
+                // already connected
+                await ctx.RespondAsync("Not connected in this guild.");
+                return;
+            }
+
+
+            // wait for current playback to finish
+            while (vnc.IsPlaying)
+                await vnc.WaitForPlaybackFinishAsync();
+
+            // play
+            Exception exc = null;
+            await ctx.Message.RespondAsync($"DJ Mode");
+
+            try
+            {
+                await vnc.SendSpeakingAsync(true);
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+
+                var chrome = Process.Start("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe", filename);
+
+                PlayProcessId = chrome.Id;
+                var chromeOut = chrome.StandardOutput.BaseStream;
+
+                var txStream = vnc.GetTransmitSink();
+                
+                await chromeOut.CopyToAsync(txStream);
+                //await txStream.FlushAsync();
+               // await vnc.WaitForPlaybackFinishAsync();
+            }
+            catch (Exception ex) { exc = ex; }
+            finally
+            {
+               // await vnc.SendSpeakingAsync(false);
+            }
+
+            if (exc != null)
+                await ctx.RespondAsync($"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
+        }
     }
 }
