@@ -81,6 +81,7 @@ namespace ProjektDjAladar
         public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
         {
             var pathToFile = YoutubeDownload.DownloadVideo(filename);
+            //var pathToFile = await Grabber.GrabYouTube(filename);
             var vnext = ctx.Client.GetVoiceNext();
             if (vnext == null)
             {
@@ -99,12 +100,12 @@ namespace ProjektDjAladar
             }
 
             // check if file exists
-            if (!File.Exists(pathToFile))
-            {
-                // file does not exist
-                await ctx.RespondAsync($"File `{pathToFile}` does not exist.");
-                return;
-            }
+            //if (!File.Exists(pathToFile))
+            //{
+            //    // file does not exist
+            //    await ctx.RespondAsync($"File `{pathToFile}` does not exist.");
+            //    return;
+            //}
 
             // wait for current playback to finish
             while (vnc.IsPlaying)
@@ -156,7 +157,7 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync($"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
         }
 
-        [Command("directplay"), Description("Plays an audio file from file path.")]
+        [Command("playlocal"), Description("Plays an audio file from file path.")]
         public async Task DirectPlay(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
         {
             var pathToFile = Path.GetFullPath(filename);
