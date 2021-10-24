@@ -141,26 +141,13 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync("VNext is not enabled or configured.");
                 return;
             }
-            var vnc = vnext.GetConnection(ctx.Guild);
-            await vnc.SendSpeakingAsync(false);
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
 
-            var psi = Process.GetProcessById(PlayProcessId);
-            psi.Kill();
-            psi.WaitForExit();
-            psi.Dispose();
+            await conn.StopAsync();
 
-            await ctx.Message.RespondAsync($"Stopped playing");
-
-            DirectoryInfo di = new DirectoryInfo(@"E:\bot");
-
-            foreach (FileInfo file in di.GetFiles())
-            {
-                file.Delete();
-            }
-            foreach (DirectoryInfo dir in di.GetDirectories())
-            {
-                dir.Delete(true);
-            }
+            await ctx.Message.RespondAsync($"Stopped playing!");
         }
 
         [Command("pause"), Description("Stops playing audio")]
@@ -188,25 +175,36 @@ namespace ProjektDjAladar
                 return;
             }
 
+            await ctx.RespondAsync($"Paused playing!");
             await conn.PauseAsync();
         }
 
         [Command("resume"), Description("Stops playing audio")]
         public async Task Resume(CommandContext ctx)
         {
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
+            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
             {
-                // not enabled
-                await ctx.RespondAsync("VNext is not enabled or configured.");
+                await ctx.RespondAsync("You are not in a voice channel.");
                 return;
             }
-            var vnc = vnext.GetConnection(ctx.Guild);
-            var txStream = vnc.GetTransmitSink();
-            await txStream.ResumeAsync();
-            await vnc.ResumeAsync();
 
-            await ctx.Message.RespondAsync($"Paused playback");
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
+            {
+                await ctx.RespondAsync("Lavalink is not connected.");
+                return;
+            }
+
+            if (conn.CurrentState.CurrentTrack == null)
+            {
+                await ctx.RespondAsync("There are no tracks loaded.");
+                return;
+            }
+            await ctx.RespondAsync($"Resumed playing!");
+            await conn.ResumeAsync();
         }
     }
 }
