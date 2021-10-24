@@ -46,7 +46,11 @@ namespace ProjektDjAladar
 
             // channel not specified, use user's
             if (chn == null)
+            {
                 chn = vstat.Channel;
+                await ctx.RespondAsync($"Connected to `{chn.Name}`");
+            }
+      
 
             // connect
 
