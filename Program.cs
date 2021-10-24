@@ -7,6 +7,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Lavalink;
+using DSharpPlus.Net;
 using DSharpPlus.VoiceNext;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,7 +18,7 @@ namespace ProjektDjAladar
     public class Program
     {
         public readonly EventId BotEventId = new EventId(42, "Bot-Ex04");
-        
+
         public DiscordClient Client { get; set; }
         public CommandsNextExtension Commands { get; set; }
         public VoiceNextExtension Voice { get; set; }
@@ -88,6 +90,24 @@ namespace ProjektDjAladar
             // finally, let's connect and log in
             await this.Client.ConnectAsync();
 
+            var endpoint = new ConnectionEndpoint
+            {
+                Hostname = "127.0.0.1", // From your server configuration.
+                Port = 2333 // From your server configuration
+            };
+
+            var lavalinkConfig = new LavalinkConfiguration
+            {
+                Password = "youshallnotpass", // From your server configuration.
+                RestEndpoint = endpoint,
+                SocketEndpoint = endpoint
+            };
+
+            var lavalink = Client.UseLavalink();
+
+
+            await lavalink.ConnectAsync(lavalinkConfig); // Make sure this is after Discord.ConnectAsync(). 
+
             // for this example you will need to read the 
             // VoiceNext setup guide, and include ffmpeg.
 
@@ -99,7 +119,7 @@ namespace ProjektDjAladar
         {
             // let's log the fact that this event occured
             sender.Logger.LogInformation(BotEventId, "Client is ready to process events.");
-            
+
             // since this method is not async, let's return
             // a completed task, so that no additional work
             // is done

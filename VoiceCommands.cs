@@ -6,6 +6,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;
+using DSharpPlus.Lavalink;
+using System.Linq;
 
 namespace ProjektDjAladar
 {
@@ -47,6 +49,16 @@ namespace ProjektDjAladar
                 chn = vstat.Channel;
 
             // connect
+
+            var lava = ctx.Client.GetLavalink();
+            if (!lava.ConnectedNodes.Any())
+            {
+                await ctx.RespondAsync("The Lavalink connection is not established");
+                return;
+            }
+
+            var node = lava.ConnectedNodes.Values.First();
+            await node.ConnectAsync(vstat.Channel);
             vnc = await vnext.ConnectAsync(chn);
             await ctx.RespondAsync($"Connected to `{chn.Name}`");
         }
@@ -72,157 +84,51 @@ namespace ProjektDjAladar
                 return;
             }
 
+            var lava = ctx.Client.GetLavalink();
+            if (!lava.ConnectedNodes.Any())
+            {
+                await ctx.RespondAsync("The Lavalink connection is not established");
+                return;
+            }
+
             // disconnect
             vnc.Disconnect();
             await ctx.RespondAsync("Disconnected");
         }
 
         [Command("play"), Description("Plays an audio file from YouTube")]
-        public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
+        public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
         {
-            var pathToFile = YoutubeDownload.DownloadVideo(filename);
-            //var pathToFile = await Grabber.GrabYouTube(filename);
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
+            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
             {
-                // not enabled
-                await ctx.RespondAsync("VNext is not enabled or configured.");
+                await ctx.RespondAsync("You are not in a voice channel.");
                 return;
             }
 
-            // check whether we aren't already connected
-            var vnc = vnext.GetConnection(ctx.Guild);
-            if (vnc == null)
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
             {
-                // already connected
-                await ctx.RespondAsync("Not connected in this guild.");
+                await ctx.RespondAsync("Lavalink is not connected.");
                 return;
             }
 
-            // check if file exists
-            //if (!File.Exists(pathToFile))
-            //{
-            //    // file does not exist
-            //    await ctx.RespondAsync($"File `{pathToFile}` does not exist.");
-            //    return;
-            //}
+            var loadResult = await node.Rest.GetTracksAsync(search);
 
-            // wait for current playback to finish
-            while (vnc.IsPlaying)
-                await vnc.WaitForPlaybackFinishAsync();
-
-            // play
-            Exception exc = null;
-            await ctx.Message.RespondAsync($"Playing `{pathToFile}`");
-
-            try
+            if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+                || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
             {
-                await vnc.SendSpeakingAsync(true);
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "ffmpeg.exe",
-                    Arguments = $@"-i ""{pathToFile}"" -ac 2 -f s16le -ar 48000 pipe:1 -loglevel quiet",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false
-                };
-                var ffmpeg = Process.Start(psi);
-                PlayProcessId = ffmpeg.Id;
-                var ffout = ffmpeg.StandardOutput.BaseStream;
-
-                var txStream = vnc.GetTransmitSink();
-                await ffout.CopyToAsync(txStream);
-                await txStream.FlushAsync();
-                await vnc.WaitForPlaybackFinishAsync();
-            }
-            catch (Exception ex) { exc = ex; }
-            finally
-            {
-                await vnc.SendSpeakingAsync(false);
-                await ctx.Message.RespondAsync($"Finished playing `{pathToFile}`");
-
-                DirectoryInfo di = new DirectoryInfo(@"E:\bot");
-
-                foreach (FileInfo file in di.GetFiles())
-                {
-                    file.Delete();
-                }
-                foreach (DirectoryInfo dir in di.GetDirectories())
-                {
-                    dir.Delete(true);
-                }
-            }
-
-            if (exc != null)
-                await ctx.RespondAsync($"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
-        }
-
-        [Command("playlocal"), Description("Plays an audio file from file path.")]
-        public async Task DirectPlay(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
-        {
-            var pathToFile = Path.GetFullPath(filename);
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
-            {
-                // not enabled
-                await ctx.RespondAsync("VNext is not enabled or configured.");
+                await ctx.RespondAsync($"Track search failed for {search}.");
                 return;
             }
 
-            // check whether we aren't already connected
-            var vnc = vnext.GetConnection(ctx.Guild);
-            if (vnc == null)
-            {
-                // already connected
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
+            var track = loadResult.Tracks.First();
 
-            // check if file exists
-            if (!File.Exists(pathToFile))
-            {
-                // file does not exist
-                await ctx.RespondAsync($"File `{pathToFile}` does not exist.");
-                return;
-            }
+            await conn.PlayAsync(track);
 
-            // wait for current playback to finish
-            while (vnc.IsPlaying)
-                await vnc.WaitForPlaybackFinishAsync();
-
-            // play
-            Exception exc = null;
-            await ctx.Message.RespondAsync($"Playing `{pathToFile}`");
-
-            try
-            {
-                await vnc.SendSpeakingAsync(true);
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "ffmpeg.exe",
-                    Arguments = $@"-i ""{pathToFile}"" -ac 2 -f s16le -ar 48000 pipe:1 -loglevel quiet",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false
-                };
-                var ffmpeg = Process.Start(psi);
-                PlayProcessId = ffmpeg.Id;
-                var ffout = ffmpeg.StandardOutput.BaseStream;
-
-                var txStream = vnc.GetTransmitSink();
-                await ffout.CopyToAsync(txStream);
-                await txStream.FlushAsync();
-                await vnc.WaitForPlaybackFinishAsync();
-            }
-            catch (Exception ex) { exc = ex; }
-            finally
-            {
-                await vnc.SendSpeakingAsync(false);
-                await ctx.Message.RespondAsync($"Finished playing `{pathToFile}`");
-            }
-
-            if (exc != null)
-                await ctx.RespondAsync($"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
+            await ctx.RespondAsync($"Now playing {track.Title}!");
         }
 
         [Command("stop"), Description("Stops playing audio")]
@@ -255,25 +161,34 @@ namespace ProjektDjAladar
             {
                 dir.Delete(true);
             }
-
         }
 
         [Command("pause"), Description("Stops playing audio")]
         public async Task Pause(CommandContext ctx)
         {
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
+            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
             {
-                // not enabled
-                await ctx.RespondAsync("VNext is not enabled or configured.");
+                await ctx.RespondAsync("You are not in a voice channel.");
                 return;
             }
-            var vnc = vnext.GetConnection(ctx.Guild);
-            var txStream = vnc.GetTransmitSink();
-            txStream.Pause();
-            vnc.Pause();
 
-            await ctx.Message.RespondAsync($"Paused playback");
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (conn == null)
+            {
+                await ctx.RespondAsync("Lavalink is not connected.");
+                return;
+            }
+
+            if (conn.CurrentState.CurrentTrack == null)
+            {
+                await ctx.RespondAsync("There are no tracks loaded.");
+                return;
+            }
+
+            await conn.PauseAsync();
         }
 
         [Command("resume"), Description("Stops playing audio")]
@@ -293,70 +208,6 @@ namespace ProjektDjAladar
 
             await ctx.Message.RespondAsync($"Paused playback");
         }
-
-
-
-
-
-        [Command("imdj"), Description("Plays an audio file from YouTube")]
-        public async Task ImDj(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string filename)
-        {
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
-            {
-                // not enabled
-                await ctx.RespondAsync("VNext is not enabled or configured.");
-                return;
-            }
-
-            // check whether we aren't already connected
-            var vnc = vnext.GetConnection(ctx.Guild);
-            if (vnc == null)
-            {
-                // already connected
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
-
-
-            // wait for current playback to finish
-            while (vnc.IsPlaying)
-                await vnc.WaitForPlaybackFinishAsync();
-
-            // play
-            Exception exc = null;
-            await ctx.Message.RespondAsync($"DJ Mode");
-
-            try
-            {
-                await vnc.SendSpeakingAsync(true);
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false
-                };
-
-                var chrome = Process.Start("C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe", filename);
-
-                PlayProcessId = chrome.Id;
-                var chromeOut = chrome.StandardOutput.BaseStream;
-
-                var txStream = vnc.GetTransmitSink();
-                
-                await chromeOut.CopyToAsync(txStream);
-                //await txStream.FlushAsync();
-               // await vnc.WaitForPlaybackFinishAsync();
-            }
-            catch (Exception ex) { exc = ex; }
-            finally
-            {
-               // await vnc.SendSpeakingAsync(false);
-            }
-
-            if (exc != null)
-                await ctx.RespondAsync($"An exception occured during playback: `{exc.GetType()}: {exc.Message}`");
-        }
     }
 }
+
