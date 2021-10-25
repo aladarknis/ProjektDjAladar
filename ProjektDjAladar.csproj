@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>ProjektDjAladar</RootNamespace>
+    <AssemblyName>ProjektDjAladar</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DSharpPlus" Version="4.1.0" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0" />
+    <PackageReference Include="DSharpPlus.Lavalink" Version="4.1.0" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="4.1.0" />
+    <PackageReference Include="MediaBrowser.Common" Version="4.7.0.10" />
+    <PackageReference Include="MediaToolkit" Version="1.1.0.1" />
+    <PackageReference Include="RestSharp" Version="106.12.0" />
+    <PackageReference Include="SharpGrabber" Version="2.0.1" />
+    <PackageReference Include="SharpGrabber.Converter" Version="1.0.0" />
+    <PackageReference Include="SharpGrabber.YouTube" Version="1.1.0" />
+    <PackageReference Include="VideoLibrary" Version="3.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Lavalink\application.yml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Lavalink\Lavalink.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
