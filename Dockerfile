@@ -19,7 +19,7 @@ ADD Lavalink Lavalink
 COPY start.sh .
 
 # Build project
-RUN cd src; dotnet publish -c Release -r linux-x64
+RUN dotnet publish -c Release -r linux-x64
 
 # Start bot
 CMD ["./start.sh"]
