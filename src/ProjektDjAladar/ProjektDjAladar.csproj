@@ -22,15 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="config.json">
+    <Content Include="..\..\resources\config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Lavalink\application.yml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Lavalink\Lavalink.jar">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>
