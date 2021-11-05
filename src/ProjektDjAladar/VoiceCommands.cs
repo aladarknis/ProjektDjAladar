@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -119,7 +117,8 @@ namespace ProjektDjAladar
                 return;
             }
 
-            var loadResult = await node.Rest.GetTracksAsync(search);
+            Uri uri = new Uri(search);
+            var loadResult = await node.Rest.GetTracksAsync(uri);
 
             if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
                 || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
