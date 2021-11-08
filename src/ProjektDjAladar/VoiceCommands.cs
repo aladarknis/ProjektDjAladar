@@ -119,8 +119,8 @@ namespace ProjektDjAladar
             }
 
             var track = loadResult.Tracks.First();
-            TrackQueue.Enqueue(track);
 
+            TrackQueue.Enqueue(track);
 
             if (await ConnectionCheck(ctx, conn))
             {
@@ -239,6 +239,26 @@ namespace ProjektDjAladar
                 var state = conn.CurrentState;
                 var track = state.CurrentTrack;
                 await ctx.RespondAsync($"Now playing: {track.Title} by {track.Author} [{state.PlaybackPosition}/{track.Length}].").ConfigureAwait(false);
+            }
+        }
+
+        [Command("queue"), Description("Shows actual queued songs.")]
+        public async Task Queue(CommandContext ctx)
+        {
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            if (await ConnectionCheck(ctx, conn))
+            {
+                var sb = new StringBuilder();
+                sb.Append("Queue: ```");
+                foreach (LavalinkTrack track in TrackQueue)
+                {
+                    sb.Append($"{track.Title} by {track.Author}").AppendLine();
+                }
+                sb.Append("```");
+                await ctx.RespondAsync(sb.ToString()).ConfigureAwait(false);
             }
         }
 
