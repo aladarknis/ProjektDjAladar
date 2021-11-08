@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Lavalink;
@@ -7,9 +8,9 @@ using DSharpPlus.VoiceNext;
 
 namespace ProjektDjAladar
 {
-	public class Program
+    public class Program
     {
-        
+
 
         public DiscordClient Client { get; set; }
         public CommandsNextExtension Commands { get; set; }
@@ -51,6 +52,12 @@ namespace ProjektDjAladar
             this.Voice = this.Client.UseVoiceNext();
 
             await this.Client.ConnectAsync();
+
+            //var lavalinkProcress = new Process();
+            //lavalinkProcress.StartInfo.FileName = "java";
+            //lavalinkProcress.StartInfo.Arguments = @"-jar " + "Lavalink/Lavalink.jar";
+            //lavalinkProcress.Start();
+
 
             var endpoint = new ConnectionEndpoint
             {
