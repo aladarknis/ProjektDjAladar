@@ -119,14 +119,20 @@ namespace ProjektDjAladar
             }
 
             var track = loadResult.Tracks.First();
+            TrackQueue.Enqueue(track);
+
 
             if (await ConnectionCheck(ctx, conn))
             {
-                await conn.PlayAsync(track);
+                if (conn.CurrentState.CurrentTrack == null)
+                {
+                    await conn.PlayAsync((LavalinkTrack)TrackQueue.Dequeue());
 
-                await ctx.RespondAsync($"Now playing {track.Title}!");
+                    await ctx.RespondAsync($"Now playing {track.Title}!");
+                }
             }
         }
+
 
         [Command("playpartial"), Description("Plays a part of audio file from YouTube")]
         public async Task PlayPartial(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search, TimeSpan start, TimeSpan stop)
