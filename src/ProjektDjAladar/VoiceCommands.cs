@@ -147,7 +147,6 @@ namespace ProjektDjAladar
                 await PlayFromQueue(conn);
             }
         }
-
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
             var request = (TrackRequest)TrackQueue.Dequeue();
@@ -161,6 +160,37 @@ namespace ProjektDjAladar
                 //_ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
 
                 conn.PlaybackFinished += Conn_PlaybackFinished;
+            }
+        }
+
+        [Command("forceplay"), Description("Queuest request to the top")]
+        public async Task ForcePlay(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
+        {
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            Uri uri = new Uri(search);
+            LavalinkLoadResult loadResult = await node.Rest.GetTracksAsync(uri);
+
+            if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
+                || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+            {
+                await ctx.RespondAsync($"Track search failed for {search}.");
+                return;
+            }
+            var oldQueue = TrackQueue;
+            TrackQueue.Clear();
+            foreach (LavalinkTrack track in loadResult.Tracks)
+            {
+
+                TrackQueue.Enqueue(new TrackRequest(ctx, track));
+            }
+
+            foreach (TrackRequest request in oldQueue)
+            {
+
+                TrackQueue.Enqueue(request);
             }
         }
 
