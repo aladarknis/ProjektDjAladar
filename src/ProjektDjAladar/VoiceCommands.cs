@@ -151,7 +151,8 @@ namespace ProjektDjAladar
             if (conn.CurrentState.CurrentTrack == null)
             {
                 await conn.PlayAsync((LavalinkTrack)track);
-                _ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
+                //TODO Announce playing track pulled from queue
+                //_ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
 
                 conn.PlaybackFinished += Conn_PlaybackFinished;
             }
@@ -398,7 +399,6 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync("Lavalink is not connected.");
                 return false;
             }
-
 
             return true;
         }

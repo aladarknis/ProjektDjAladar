@@ -73,8 +73,7 @@ namespace ProjektDjAladar
             };
 
             var lavalink = Client.UseLavalink();
-
-
+            
             await lavalink.ConnectAsync(lavalinkConfig);
             await Task.Delay(-1);
         }
