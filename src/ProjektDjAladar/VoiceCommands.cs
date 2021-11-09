@@ -123,13 +123,14 @@ namespace ProjektDjAladar
 
             var track = loadResult.Tracks.First();
 
-            TrackQueue.Enqueue(track);
+            TrackQueue.Enqueue(new TrackRequest(ctx, track));
 
             if (await ConnectionCheck(ctx, conn))
             {
                 if (conn.CurrentState.CurrentTrack == null)
                 {
-                    await conn.PlayAsync((LavalinkTrack)TrackQueue.Dequeue());
+                    var request = (TrackRequest)TrackQueue.Dequeue();
+                    await conn.PlayAsync(request.GetRequestTrack());
 
                     await ctx.RespondAsync($"Now playing {track.Title}!");
 
@@ -148,10 +149,13 @@ namespace ProjektDjAladar
 
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
-            var track = TrackQueue.Dequeue();
+            var request = (TrackRequest)TrackQueue.Dequeue();
+            var track = request.GetRequestTrack();
+            var ctx = request.GetRequestCtx();
             if (conn.CurrentState.CurrentTrack == null)
             {
-                await conn.PlayAsync((LavalinkTrack)track);
+                await conn.PlayAsync(track);
+                await ctx.RespondAsync($"Now playing {track.Title}!");
                 //TODO Announce playing track pulled from queue
                 //_ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
 
@@ -166,7 +170,6 @@ namespace ProjektDjAladar
             var node = lava.ConnectedNodes.Values.First();
             var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
 
-
             Uri uri = new Uri(search);
             LavalinkLoadResult loadResult = await node.Rest.GetTracksAsync(uri);
 
@@ -179,11 +182,19 @@ namespace ProjektDjAladar
 
             var track = loadResult.Tracks.First();
 
+            TrackQueue.Enqueue(new TrackRequest(ctx, track));
+
             if (await ConnectionCheck(ctx, conn))
             {
-                await conn.PlayPartialAsync(track, start, stop);
+                if (conn.CurrentState.CurrentTrack == null)
+                {
+                    var request = (TrackRequest)TrackQueue.Dequeue();
+                    await conn.PlayPartialAsync(request.GetRequestTrack(), start, stop);
 
-                await ctx.RespondAsync($"Now playing {track.Title}!");
+                    await ctx.RespondAsync($"Now playing {track.Title}!");
+
+                    conn.PlaybackFinished += Conn_PlaybackFinished;
+                }
             }
         }
 
@@ -312,9 +323,9 @@ namespace ProjektDjAladar
             {
                 var sb = new StringBuilder();
                 sb.Append("Queue: ```");
-                foreach (LavalinkTrack track in TrackQueue)
+                foreach (TrackRequest request in TrackQueue)
                 {
-                    sb.Append($"{track.Title} by {track.Author}").AppendLine();
+                    sb.Append($"{request.GetRequestTrack().Title} by {request.GetRequestTrack().Author}").AppendLine();
                 }
                 sb.Append("```");
                 await ctx.RespondAsync(sb.ToString()).ConfigureAwait(false);
@@ -412,7 +423,7 @@ namespace ProjektDjAladar
         {
             await ctx.RespondAsync("Negre seber se a vypadni!");
             await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
-		}
+        }
 
         private static readonly string[] Units = new[] { "", "ki", "Mi", "Gi" };
         private static string SizeToString(long l)
