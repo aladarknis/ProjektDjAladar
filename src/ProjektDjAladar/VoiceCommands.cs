@@ -302,6 +302,12 @@ namespace ProjektDjAladar
             var node = lava.ConnectedNodes.Values.First();
             var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
 
+            if (TrackQueue.Count == 0)
+            {
+                await ctx.RespondAsync("Queue is empty!").ConfigureAwait(false);
+                return;
+            }
+
             if (await ConnectionCheck(ctx, conn))
             {
                 var sb = new StringBuilder();
@@ -403,7 +409,8 @@ namespace ProjektDjAladar
 
         [Command("vymitani"), Description("Negre seber se a vypadni!")]
         public async Task vymitaniAsync(CommandContext ctx)
-		{
+        {
+            await ctx.RespondAsync("Negre seber se a vypadni!");
             await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
 		}
 
