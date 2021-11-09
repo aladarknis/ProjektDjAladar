@@ -179,15 +179,15 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync($"Track search failed for {search}.");
                 return;
             }
-            var oldQueue = TrackQueue;
+            var oldQueue = TrackQueue.ToArray();
             TrackQueue.Clear();
-            foreach (LavalinkTrack track in loadResult.Tracks)
+            foreach (var track in loadResult.Tracks)
             {
 
                 TrackQueue.Enqueue(new TrackRequest(ctx, track));
             }
 
-            foreach (TrackRequest request in oldQueue)
+            foreach (var request in oldQueue)
             {
 
                 TrackQueue.Enqueue(request);
