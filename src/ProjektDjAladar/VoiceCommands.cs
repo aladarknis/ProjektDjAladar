@@ -8,6 +8,8 @@ using DSharpPlus.Lavalink;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using System.Runtime.CompilerServices;
+using DSharpPlus.Lavalink.EventArgs;
 
 namespace ProjektDjAladar
 {
@@ -129,10 +131,31 @@ namespace ProjektDjAladar
                     await conn.PlayAsync((LavalinkTrack)TrackQueue.Dequeue());
 
                     await ctx.RespondAsync($"Now playing {track.Title}!");
+
+                    conn.PlaybackFinished += Conn_PlaybackFinished;
                 }
             }
         }
 
+        private async Task Conn_PlaybackFinished(LavalinkGuildConnection conn, TrackFinishEventArgs e)
+        {
+            if (TrackQueue.Count != 0)
+            {
+                await PlayFromQueue(conn);
+            }
+        }
+
+        private async Task PlayFromQueue(LavalinkGuildConnection conn)
+        {
+            var track = TrackQueue.Dequeue();
+            if (conn.CurrentState.CurrentTrack == null)
+            {
+                await conn.PlayAsync((LavalinkTrack)track);
+                _ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
+
+                conn.PlaybackFinished += Conn_PlaybackFinished;
+            }
+        }
 
         [Command("playpartial"), Description("Plays a part of audio file from YouTube")]
         public async Task PlayPartial(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search, TimeSpan start, TimeSpan stop)
