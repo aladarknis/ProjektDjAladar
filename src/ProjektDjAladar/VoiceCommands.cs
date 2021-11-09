@@ -372,6 +372,12 @@ namespace ProjektDjAladar
             }
         }
 
+        [Command("vymitani"), Description("Negre seber se a vypadni!")]
+        public async Task vymitaniAsync(CommandContext ctx)
+		{
+            await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
+		}
+
         private static readonly string[] Units = new[] { "", "ki", "Mi", "Gi" };
         private static string SizeToString(long l)
         {
