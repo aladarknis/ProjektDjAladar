@@ -121,9 +121,10 @@ namespace ProjektDjAladar
                 return;
             }
 
-            var track = loadResult.Tracks.First();
-
-            TrackQueue.Enqueue(new TrackRequest(ctx, track));
+            foreach (LavalinkTrack track in loadResult.Tracks)
+            {
+                TrackQueue.Enqueue(new TrackRequest(ctx, track));
+            }
 
             if (await ConnectionCheck(ctx, conn))
             {
@@ -132,7 +133,7 @@ namespace ProjektDjAladar
                     var request = (TrackRequest)TrackQueue.Dequeue();
                     await conn.PlayAsync(request.GetRequestTrack());
 
-                    await ctx.RespondAsync($"Now playing {track.Title}!");
+                    await ctx.RespondAsync($"Now playing {request.GetRequestTrack().Title}!");
 
                     conn.PlaybackFinished += Conn_PlaybackFinished;
                 }
@@ -323,9 +324,21 @@ namespace ProjektDjAladar
             {
                 var sb = new StringBuilder();
                 sb.Append("Queue: ```");
-                foreach (TrackRequest request in TrackQueue)
+
+                if (TrackQueue.Count > 10)
                 {
-                    sb.Append($"{request.GetRequestTrack().Title} by {request.GetRequestTrack().Author}").AppendLine();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        sb.Append($"{((TrackRequest)TrackQueue.ToArray()[i]).GetRequestTrack().Title} by {((TrackRequest)TrackQueue.ToArray()[i]).GetRequestTrack().Author}").AppendLine();
+                    }
+                    sb.Append($"... of total {TrackQueue.Count} songs").AppendLine();
+                }
+                else
+                {
+                    foreach (TrackRequest request in TrackQueue)
+                    {
+                        sb.Append($"{request.GetRequestTrack().Title} by {request.GetRequestTrack().Author}").AppendLine();
+                    }
                 }
                 sb.Append("```");
                 await ctx.RespondAsync(sb.ToString()).ConfigureAwait(false);
