@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using DSharpPlus.Lavalink.EventArgs;
 
 namespace ProjektDjAladar
@@ -186,8 +187,8 @@ namespace ProjektDjAladar
             }
         }
 
-        [Command("stop"), Description("Stops playing audio")]
-        public async Task Stop(CommandContext ctx)
+        [Command("skip"), Description("Skips song in playing")]
+        public async Task Skip(CommandContext ctx)
         {
             var vnext = ctx.Client.GetVoiceNext();
             if (vnext == null)
@@ -202,7 +203,35 @@ namespace ProjektDjAladar
 
             await conn.StopAsync();
 
+            await ctx.Message.RespondAsync($"Skipped playing!");
+        }
+
+        [Command("stop"), Description("Stops playing audio")]
+        public async Task Stop(CommandContext ctx)
+        {
+            var vnext = ctx.Client.GetVoiceNext();
+            if (vnext == null)
+            {
+                // not enabled
+                await ctx.RespondAsync("VNext is not enabled or configured.");
+                return;
+            }
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+            TrackQueue.Clear();
+
+            await conn.StopAsync();
+
             await ctx.Message.RespondAsync($"Stopped playing!");
+        }
+
+        [Command("clear"), Description("Clears queue")]
+        public async Task Clear(CommandContext ctx)
+        {
+            TrackQueue.Clear();
+            await ctx.Message.RespondAsync($"Queue cleared!");
         }
 
         [Command("pause"), Description("Stops playing audio")]
