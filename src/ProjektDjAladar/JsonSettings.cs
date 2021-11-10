@@ -19,6 +19,9 @@ namespace ProjektDjAladar
 
 			[JsonProperty("prefix")]
 			public string CommandPrefix { get; private set; }
+
+			[JsonProperty("vymitani")]
+			public string VymitaniUrl { get; private set; }
 		}
 
 		public ConfigJson LoadedSettings;

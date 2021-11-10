@@ -9,7 +9,7 @@ namespace ProjektDjAladar
 {
 	class ClientEvents
 	{
-        private readonly EventId BotEventId = new EventId(42, "Bot-Ex04");
+        private readonly EventId BotEventId = new EventId(42, "ProjektDjAladar");
 
         public Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
         {
