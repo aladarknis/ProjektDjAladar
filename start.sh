@@ -9,3 +9,4 @@ sleep 10
 
 echo "Starting discord bot ..."
 cd ../src/ProjektDjAladar/bin/Release/net5.0/linux-x64/publish; ./ProjektDjAladar
+
