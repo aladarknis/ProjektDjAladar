@@ -8,7 +8,7 @@ post '/payload' do
   puts "I got some JSON: #{push_json.inspect}"
   ref = push_json["ref"]
   if ref.include? "main" or ref.include? "master"
-    value = `#{Dir.pwd}/run_docker_compose.sh`
+    puts `#{Dir.pwd}/update_docker_container.sh >&2`
   end
 end
 
