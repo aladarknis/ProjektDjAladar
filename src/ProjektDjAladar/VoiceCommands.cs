@@ -88,15 +88,6 @@ namespace ProjektDjAladar
                 return;
             }
 
-            // check whether we are connected
-            //var vnc = vnext.GetConnection(ctx.Guild);
-            //if (vnc == null)
-            //{
-            //    // not connected
-            //    await ctx.RespondAsync("Not connected in this guild.");
-            //    return;
-            //}
-
             if (!lava.ConnectedNodes.Any())
             {
                 await ctx.RespondAsync("The Lavalink connection is not established");
