@@ -17,6 +17,7 @@ namespace ProjektDjAladar
     public class VoiceCommands : BaseCommandModule
     {
         public Queue TrackQueue = new Queue();
+        public bool Loop = false;
 
         [Command("join"), Description("Joins a voice channel.")]
         public async Task Join(CommandContext ctx, DiscordChannel chn = null)
@@ -74,6 +75,10 @@ namespace ProjektDjAladar
         [Command("leave"), Description("Leaves a voice channel.")]
         public async Task Leave(CommandContext ctx)
         {
+            var lava = ctx.Client.GetLavalink();
+            var node = lava.ConnectedNodes.Values.First();
+            var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
             // check whether VNext is enabled
             var vnext = ctx.Client.GetVoiceNext();
             if (vnext == null)
@@ -84,15 +89,14 @@ namespace ProjektDjAladar
             }
 
             // check whether we are connected
-            var vnc = vnext.GetConnection(ctx.Guild);
-            if (vnc == null)
-            {
-                // not connected
-                await ctx.RespondAsync("Not connected in this guild.");
-                return;
-            }
+            //var vnc = vnext.GetConnection(ctx.Guild);
+            //if (vnc == null)
+            //{
+            //    // not connected
+            //    await ctx.RespondAsync("Not connected in this guild.");
+            //    return;
+            //}
 
-            var lava = ctx.Client.GetLavalink();
             if (!lava.ConnectedNodes.Any())
             {
                 await ctx.RespondAsync("The Lavalink connection is not established");
@@ -100,8 +104,11 @@ namespace ProjektDjAladar
             }
 
             // disconnect
-            vnc.Disconnect();
-            await ctx.RespondAsync("Disconnected");
+            if (await ConnectionCheck(ctx, conn))
+            {
+                await conn.DisconnectAsync();
+                await ctx.RespondAsync("Disconnected");
+            }
         }
 
         [Command("play"), Description("Plays an audio file from YouTube")]
@@ -125,12 +132,24 @@ namespace ProjektDjAladar
             {
                 TrackQueue.Enqueue(new TrackRequest(ctx, track));
             }
+            var connection = await ConnectionCheck(ctx, conn);
+
+            if (!connection)
+            {
+                await ctx.RespondAsync($"Trying to connect");
+                var task = Join(ctx);
+                task.Wait(1000);
+                lava = ctx.Client.GetLavalink();
+                node = lava.ConnectedNodes.Values.First();
+                conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+            }
 
             if (await ConnectionCheck(ctx, conn))
             {
                 if (conn.CurrentState.CurrentTrack == null)
                 {
                     var request = (TrackRequest)TrackQueue.Dequeue();
+                    if (Loop) { TrackQueue.Enqueue(request); }
                     await conn.PlayAsync(request.GetRequestTrack());
 
                     await ctx.RespondAsync($"Now playing {request.GetRequestTrack().Title}!");
@@ -150,14 +169,17 @@ namespace ProjektDjAladar
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
             var request = (TrackRequest)TrackQueue.Dequeue();
+            if (Loop) { TrackQueue.Enqueue(request); }
             var track = request.GetRequestTrack();
             var ctx = request.GetRequestCtx();
             if (conn.CurrentState.CurrentTrack == null)
             {
                 await conn.PlayAsync(track);
-                await ctx.RespondAsync($"Now playing {track.Title}!");
-                //TODO Announce playing track pulled from queue
-                //_ = conn.Channel.SendMessageAsync($"Now playing {((LavalinkTrack)track)?.Title}!");
+
+                if (!Loop)
+                {
+                    await ctx.RespondAsync($"Now playing {track.Title}!");
+                }
 
                 conn.PlaybackFinished += Conn_PlaybackFinished;
             }
@@ -394,6 +416,15 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync($"Seeking to {position}.").ConfigureAwait(false);
             }
         }
+
+        [Command("loop"), Description("Loops or unloops current track")]
+        public async Task LoopTrack(CommandContext ctx)
+        {
+            Loop = !Loop;
+            if (Loop) { await ctx.RespondAsync($"Loop enabled"); }
+            else { await ctx.RespondAsync($"Loop disabled"); }
+        }
+
 
         [Command("volume"), Description("Changes playback volume.")]
         public async Task VolumeAsync(CommandContext ctx, int volume)
