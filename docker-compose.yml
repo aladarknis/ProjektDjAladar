@@ -3,3 +3,5 @@ services:
   djaladar:
     build:
       context: .
+    environment:
+      - "ALADAR_BOT=${ALADAR_BOT}"

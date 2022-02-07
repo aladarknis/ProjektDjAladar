@@ -1,10 +1,6 @@
-﻿
-using DSharpPlus;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace ProjektDjAladar
 {
@@ -14,9 +10,6 @@ namespace ProjektDjAladar
 
 		public struct ConfigJson
 		{
-			[JsonProperty("token")]
-			public string Token { get; private set; }
-
 			[JsonProperty("prefix")]
 			public string CommandPrefix { get; private set; }
 
@@ -46,19 +39,6 @@ namespace ProjektDjAladar
 			using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
 				json = sr.ReadToEnd();
 			LoadedSettings = JsonConvert.DeserializeObject<ConfigJson>(json);
-		}
-
-		public DiscordConfiguration GetDiscordConfiguration()
-		{
-			var cfg = new DiscordConfiguration
-			{
-				Token = LoadedSettings.Token,
-				TokenType = TokenType.Bot,
-
-				AutoReconnect = true,
-				MinimumLogLevel = LogLevel.Debug,
-			};
-			return cfg;
 		}
 	}
 }

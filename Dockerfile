@@ -8,6 +8,7 @@ rm openjdk-17*_bin.tar.gz
    
 # Edit PATH   
 ENV PATH="/usr/bin/jdk-17/bin:${PATH}"
+# ENV ALADAR_BOT=""
 
 # Copy source
 RUN mkdir src Lavalink resources

@@ -1,33 +1,63 @@
-﻿using System.Diagnostics;
+﻿using System;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Net;
 using DSharpPlus.VoiceNext;
+using Microsoft.Extensions.Logging;
+
 
 namespace ProjektDjAladar
 {
     public class Program
     {
-
-
         public DiscordClient Client { get; set; }
         public CommandsNextExtension Commands { get; set; }
         public VoiceNextExtension Voice { get; set; }
+        public string token { get; set; }
 
         public static void Main(string[] args)
         {
             new Program().RunBotAsync().GetAwaiter().GetResult();
         }
 
+        public DiscordConfiguration GetDiscordConfiguration()
+        {
+            var cfg = new DiscordConfiguration
+            {
+                Token = token,
+                TokenType = TokenType.Bot,
+
+                AutoReconnect = true,
+                MinimumLogLevel = LogLevel.Debug,
+            };
+            return cfg;
+        }
+
+        public async void SetDiscordPlaying(string hash, string prefix)
+        {
+            DiscordActivity activity = new DiscordActivity();
+            activity.Name = $"{prefix}help | {hash}";
+            await this.Client.UpdateStatusAsync(activity);
+        }
+
         public async Task RunBotAsync()
         {
+            token = Environment.GetEnvironmentVariable("ALADAR_BOT");
+            if (token == "")
+            {
+                Console.WriteLine("Empty token, set an environment variable ALADAR_BOT");
+                return;
+            }
+
+            Console.WriteLine(token);
             JsonSettings Settings = new JsonSettings();
             ClientEvents ClientEve = new ClientEvents();
             CommandEvents CommandEve = new CommandEvents();
 
-            this.Client = new DiscordClient(Settings.GetDiscordConfiguration());
+            this.Client = new DiscordClient(GetDiscordConfiguration());
 
             this.Client.Ready += ClientEve.Client_Ready;
             this.Client.GuildAvailable += ClientEve.Client_GuildAvailable;
@@ -35,7 +65,7 @@ namespace ProjektDjAladar
 
             var ccfg = new CommandsNextConfiguration
             {
-                StringPrefixes = new[] { Settings.LoadedSettings.CommandPrefix },
+                StringPrefixes = new[] {Settings.LoadedSettings.CommandPrefix},
 
                 EnableDms = true,
 
@@ -53,12 +83,6 @@ namespace ProjektDjAladar
 
             await this.Client.ConnectAsync();
 
-            //var lavalinkProcress = new Process();
-            //lavalinkProcress.StartInfo.FileName = "java";
-            //lavalinkProcress.StartInfo.Arguments = @"-jar " + "Lavalink/Lavalink.jar";
-            //lavalinkProcress.Start();
-
-
             var endpoint = new ConnectionEndpoint
             {
                 Hostname = "127.0.0.1",
@@ -73,8 +97,11 @@ namespace ProjektDjAladar
             };
 
             var lavalink = Client.UseLavalink();
-            
+
             await lavalink.ConnectAsync(lavalinkConfig);
+            string hash = ProcessRunner.RunProcess("git", "rev-parse origin/master");
+            SetDiscordPlaying(hash.Substring(0, 7), Settings.LoadedSettings.CommandPrefix);
+
             await Task.Delay(-1);
         }
     }
