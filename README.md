@@ -17,7 +17,7 @@ Once there, type `java -jar Lavalink.jar`. You should start seeing log output fr
 compose ([guide here](https://docs.docker.com/compose/install/))
 - To build and start the docker run:
 ```
-$ docker-compose up --build -d
+$ ./build.sh
 ```
 - An environmental variable `ALADAR_BOT` have to be set to the bot token string 
 

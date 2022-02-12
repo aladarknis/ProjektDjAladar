@@ -20,7 +20,7 @@ namespace ProjektDjAladar
 
         public static void Main(string[] args)
         {
-            new Program().RunBotAsync().GetAwaiter().GetResult();
+            new Program().RunBotAsync(args).GetAwaiter().GetResult();
         }
 
         public DiscordConfiguration GetDiscordConfiguration()
@@ -43,7 +43,7 @@ namespace ProjektDjAladar
             await this.Client.UpdateStatusAsync(activity);
         }
 
-        public async Task RunBotAsync()
+        public async Task RunBotAsync(string[] args)
         {
             token = Environment.GetEnvironmentVariable("ALADAR_BOT");
             if (token == "")
@@ -82,10 +82,10 @@ namespace ProjektDjAladar
             this.Voice = this.Client.UseVoiceNext();
 
             await this.Client.ConnectAsync();
-
+            
             var endpoint = new ConnectionEndpoint
             {
-                Hostname = "lavalink",
+                Hostname = Settings.LoadedSettings.LavalinkAddr,
                 Port = 2333
             };
 
