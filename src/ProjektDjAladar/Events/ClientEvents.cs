@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace ProjektDjAladar
 {
-    class ClientEvents
+    class ClientEvents : Event
     {
-        private readonly EventId BotEventId = new EventId(42, "ProjektDjAladar");
-
         public Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
         {
             sender.Logger.LogInformation(BotEventId, "Client is ready to process events.");

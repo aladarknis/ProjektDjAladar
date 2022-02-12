@@ -40,11 +40,9 @@ namespace ProjektDjAladar
             this.Commands.CommandErrored += commandEve.Commands_CommandErrored;
             this.Commands.RegisterCommands<VoiceCommands>();
             this.Voice = this.Client.UseVoiceNext();
-            await this.Client.ConnectAsync();
+            await this.Client.ConnectAsync(GetBotPlayingMsg());
 
             ConnectToLavalink();
-            SetBotPlaying();
-            
             await Task.Delay(-1);
         }
 
@@ -69,15 +67,6 @@ namespace ProjektDjAladar
             };
         }
 
-        private async void SetDiscordPlaying(string hash, string prefix)
-        {
-            DiscordActivity activity = new DiscordActivity
-            {
-                Name = $"{prefix}help | {hash}"
-            };
-            await this.Client.UpdateStatusAsync(activity);
-        }
-
         private bool SetToken()
         {
             Token = Environment.GetEnvironmentVariable("ALADAR_BOT");
@@ -91,10 +80,14 @@ namespace ProjektDjAladar
             return true;
         }
 
-        private void SetBotPlaying()
+        private DiscordActivity GetBotPlayingMsg()
         {
-            string hash = ProcessRunner.RunProcess("git", "rev-parse HEAD");
-            SetDiscordPlaying(hash?.Substring(0, 7), JsonSettings.LoadedSettings.CommandPrefix);
+            var hash = ProcessRunner.RunProcess("git", "rev-parse HEAD");
+            var activity = new DiscordActivity
+            {
+                Name = $"{JsonSettings.LoadedSettings.CommandPrefix}help | {hash.Substring(0, 7)}"
+            };
+            return activity;
         }
 
         private async void ConnectToLavalink()
