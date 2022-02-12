@@ -1,14 +1,12 @@
-﻿
-
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace ProjektDjAladar
 {
-	class ClientEvents
-	{
+    class ClientEvents
+    {
         private readonly EventId BotEventId = new EventId(42, "ProjektDjAladar");
 
         public Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
@@ -28,6 +26,5 @@ namespace ProjektDjAladar
             sender.Logger.LogError(BotEventId, e.Exception, "Exception occured");
             return Task.CompletedTask;
         }
-
     }
 }

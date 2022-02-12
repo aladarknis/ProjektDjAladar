@@ -8,8 +8,6 @@ using DSharpPlus.Lavalink;
 using System.Linq;
 using System.Text;
 using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using DSharpPlus.Lavalink.EventArgs;
 
 namespace ProjektDjAladar
@@ -103,7 +101,8 @@ namespace ProjektDjAladar
         }
 
         [Command("play"), Description("Plays an audio file from YouTube")]
-        public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
+        public async Task Play(CommandContext ctx,
+            [RemainingText, Description("Full path to the file to play.")] string search)
         {
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
@@ -123,6 +122,7 @@ namespace ProjektDjAladar
             {
                 TrackQueue.Enqueue(new TrackRequest(ctx, track));
             }
+
             var connection = await ConnectionCheck(ctx, conn);
 
             if (!connection)
@@ -139,8 +139,12 @@ namespace ProjektDjAladar
             {
                 if (conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest)TrackQueue.Dequeue();
-                    if (Loop) { TrackQueue.Enqueue(request); }
+                    var request = (TrackRequest) TrackQueue.Dequeue();
+                    if (Loop)
+                    {
+                        TrackQueue.Enqueue(request);
+                    }
+
                     await conn.PlayAsync(request.GetRequestTrack());
 
                     await ctx.RespondAsync($"Now playing {request.GetRequestTrack().Title}!");
@@ -157,10 +161,15 @@ namespace ProjektDjAladar
                 await PlayFromQueue(conn);
             }
         }
+
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
-            var request = (TrackRequest)TrackQueue.Dequeue();
-            if (Loop) { TrackQueue.Enqueue(request); }
+            var request = (TrackRequest) TrackQueue.Dequeue();
+            if (Loop)
+            {
+                TrackQueue.Enqueue(request);
+            }
+
             var track = request.GetRequestTrack();
             var ctx = request.GetRequestCtx();
             if (conn.CurrentState.CurrentTrack == null)
@@ -177,7 +186,8 @@ namespace ProjektDjAladar
         }
 
         [Command("forceplay"), Description("Queuest request to the top")]
-        public async Task ForcePlay(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
+        public async Task ForcePlay(CommandContext ctx,
+            [RemainingText, Description("Full path to the file to play.")] string search)
         {
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
@@ -192,23 +202,23 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync($"Track search failed for {search}.");
                 return;
             }
+
             var oldQueue = TrackQueue.ToArray();
             TrackQueue.Clear();
             foreach (var track in loadResult.Tracks)
             {
-
                 TrackQueue.Enqueue(new TrackRequest(ctx, track));
             }
 
             foreach (var request in oldQueue)
             {
-
                 TrackQueue.Enqueue(request);
             }
         }
 
         [Command("playpartial"), Description("Plays a part of audio file from YouTube")]
-        public async Task PlayPartial(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search, TimeSpan start, TimeSpan stop)
+        public async Task PlayPartial(CommandContext ctx,
+            [RemainingText, Description("Full path to the file to play.")] string search, TimeSpan start, TimeSpan stop)
         {
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
@@ -232,7 +242,7 @@ namespace ProjektDjAladar
             {
                 if (conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest)TrackQueue.Dequeue();
+                    var request = (TrackRequest) TrackQueue.Dequeue();
                     await conn.PlayPartialAsync(request.GetRequestTrack(), start, stop);
 
                     await ctx.RespondAsync($"Now playing {track.Title}!");
@@ -245,13 +255,13 @@ namespace ProjektDjAladar
         [Command("skip"), Description("Skips song in playing")]
         public async Task Skip(CommandContext ctx)
         {
-            var vnext = ctx.Client.GetVoiceNext();
-            if (vnext == null)
+            if (ctx.Client.GetVoiceNext() == null)
             {
                 // not enabled
                 await ctx.RespondAsync("VNext is not enabled or configured.");
                 return;
             }
+
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
             var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
@@ -271,6 +281,7 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync("VNext is not enabled or configured.");
                 return;
             }
+
             var lava = ctx.Client.GetLavalink();
             var node = lava.ConnectedNodes.Values.First();
             var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
@@ -346,7 +357,9 @@ namespace ProjektDjAladar
 
                 var state = conn.CurrentState;
                 var track = state.CurrentTrack;
-                await ctx.RespondAsync($"Now playing: {track.Title} by {track.Author} [{state.PlaybackPosition}/{track.Length}].").ConfigureAwait(false);
+                await ctx.RespondAsync(
+                        $"Now playing: {track.Title} by {track.Author} [{state.PlaybackPosition}/{track.Length}].")
+                    .ConfigureAwait(false);
             }
         }
 
@@ -372,17 +385,22 @@ namespace ProjektDjAladar
                 {
                     for (int i = 0; i < 10; i++)
                     {
-                        sb.Append($"{((TrackRequest)TrackQueue.ToArray()[i]).GetRequestTrack().Title} by {((TrackRequest)TrackQueue.ToArray()[i]).GetRequestTrack().Author}").AppendLine();
+                        sb.Append(
+                                $"{((TrackRequest) TrackQueue.ToArray()[i]).GetRequestTrack().Title} by {((TrackRequest) TrackQueue.ToArray()[i]).GetRequestTrack().Author}")
+                            .AppendLine();
                     }
+
                     sb.Append($"... of total {TrackQueue.Count} songs").AppendLine();
                 }
                 else
                 {
                     foreach (TrackRequest request in TrackQueue)
                     {
-                        sb.Append($"{request.GetRequestTrack().Title} by {request.GetRequestTrack().Author}").AppendLine();
+                        sb.Append($"{request.GetRequestTrack().Title} by {request.GetRequestTrack().Author}")
+                            .AppendLine();
                     }
                 }
+
                 sb.Append("```");
                 await ctx.RespondAsync(sb.ToString()).ConfigureAwait(false);
             }
@@ -412,8 +430,14 @@ namespace ProjektDjAladar
         public async Task LoopTrack(CommandContext ctx)
         {
             Loop = !Loop;
-            if (Loop) { await ctx.RespondAsync($"Loop enabled"); }
-            else { await ctx.RespondAsync($"Loop disabled"); }
+            if (Loop)
+            {
+                await ctx.RespondAsync($"Loop enabled");
+            }
+            else
+            {
+                await ctx.RespondAsync($"Loop disabled");
+            }
         }
 
 
@@ -473,11 +497,19 @@ namespace ProjektDjAladar
                 var sb = new StringBuilder();
                 sb.Append("Lavalink resources usage statistics: ```")
                     .Append("Uptime:                    ").Append(stats.Uptime).AppendLine()
-                    .Append("Players:                   ").AppendFormat("{0} active / {1} total", stats.ActivePlayers, stats.TotalPlayers).AppendLine()
+                    .Append("Players:                   ")
+                    .AppendFormat("{0} active / {1} total", stats.ActivePlayers, stats.TotalPlayers).AppendLine()
                     .Append("CPU Cores:                 ").Append(stats.CpuCoreCount).AppendLine()
-                    .Append("CPU Usage:                 ").AppendFormat("{0:#,##0.0%} lavalink / {1:#,##0.0%} system", stats.CpuLavalinkLoad, stats.CpuSystemLoad).AppendLine()
-                    .Append("RAM Usage:                 ").AppendFormat("{0} allocated / {1} used / {2} free / {3} reservable", SizeToString(stats.RamAllocated), SizeToString(stats.RamUsed), SizeToString(stats.RamFree), SizeToString(stats.RamReservable)).AppendLine()
-                    .Append("Audio frames (per minute): ").AppendFormat("{0:#,##0} sent / {1:#,##0} nulled / {2:#,##0} deficit", stats.AverageSentFramesPerMinute, stats.AverageNulledFramesPerMinute, stats.AverageDeficitFramesPerMinute).AppendLine()
+                    .Append("CPU Usage:                 ").AppendFormat("{0:#,##0.0%} lavalink / {1:#,##0.0%} system",
+                        stats.CpuLavalinkLoad, stats.CpuSystemLoad).AppendLine()
+                    .Append("RAM Usage:                 ").AppendFormat(
+                        "{0} allocated / {1} used / {2} free / {3} reservable", SizeToString(stats.RamAllocated),
+                        SizeToString(stats.RamUsed), SizeToString(stats.RamFree), SizeToString(stats.RamReservable))
+                    .AppendLine()
+                    .Append("Audio frames (per minute): ")
+                    .AppendFormat("{0:#,##0} sent / {1:#,##0} nulled / {2:#,##0} deficit",
+                        stats.AverageSentFramesPerMinute, stats.AverageNulledFramesPerMinute,
+                        stats.AverageDeficitFramesPerMinute).AppendLine()
                     .Append("```");
                 await ctx.RespondAsync(sb.ToString()).ConfigureAwait(false);
             }
@@ -490,7 +522,8 @@ namespace ProjektDjAladar
             await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
         }
 
-        private static readonly string[] Units = new[] { "", "ki", "Mi", "Gi" };
+        private static readonly string[] Units = new[] {"", "ki", "Mi", "Gi"};
+
         private static string SizeToString(long l)
         {
             double d = l;
@@ -522,4 +555,3 @@ namespace ProjektDjAladar
         }
     }
 }
-

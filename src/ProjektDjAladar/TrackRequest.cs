@@ -12,6 +12,7 @@ namespace ProjektDjAladar
     {
         private readonly CommandContext _ctx;
         private readonly LavalinkTrack _track;
+
         public TrackRequest(CommandContext ctx, LavalinkTrack track)
         {
             _ctx = ctx;
