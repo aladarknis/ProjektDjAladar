@@ -52,7 +52,7 @@ namespace ProjektDjAladar
                 return;
             }
 
-            Console.WriteLine(token);
+            Console.WriteLine($"api token: {token}");
             JsonSettings Settings = new JsonSettings();
             ClientEvents ClientEve = new ClientEvents();
             CommandEvents CommandEve = new CommandEvents();
@@ -85,7 +85,7 @@ namespace ProjektDjAladar
 
             var endpoint = new ConnectionEndpoint
             {
-                Hostname = "127.0.0.1",
+                Hostname = "lavalink",
                 Port = 2333
             };
 
@@ -99,8 +99,8 @@ namespace ProjektDjAladar
             var lavalink = Client.UseLavalink();
 
             await lavalink.ConnectAsync(lavalinkConfig);
-            string hash = ProcessRunner.RunProcess("git", "rev-parse origin/master");
-            SetDiscordPlaying(hash.Substring(0, 7), Settings.LoadedSettings.CommandPrefix);
+            string hash = ProcessRunner.RunProcess("git", "rev-parse HEAD");
+            SetDiscordPlaying(hash?.Substring(0, 7), Settings.LoadedSettings.CommandPrefix);
 
             await Task.Delay(-1);
         }

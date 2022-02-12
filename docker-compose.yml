@@ -1,7 +1,13 @@
 version: '3'
 services:
-  djaladar:
+  lavalink:
+    build:
+      context: Lavalink
+    ports:
+      - "2333:2333"
+  bot:
     build:
       context: .
     environment:
       - "ALADAR_BOT=${ALADAR_BOT}"
+  
