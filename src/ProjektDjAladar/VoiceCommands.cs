@@ -129,7 +129,7 @@ namespace ProjektDjAladar
             {
                 await ctx.RespondAsync($"Trying to connect");
                 var task = Join(ctx);
-                task.Wait(1000);
+                task.Wait(2000);
                 lava = ctx.Client.GetLavalink();
                 node = lava.ConnectedNodes.Values.First();
                 conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
