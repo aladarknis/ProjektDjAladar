@@ -1,6 +1,4 @@
-﻿
-
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
