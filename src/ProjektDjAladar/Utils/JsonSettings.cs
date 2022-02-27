@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ProjektDjAladar
 {
-    class JsonSettings
+    public class JsonSettings
     {
         private string JsonPath;
 

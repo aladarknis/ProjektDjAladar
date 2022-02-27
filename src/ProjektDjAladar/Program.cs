@@ -13,82 +13,90 @@ namespace ProjektDjAladar
 {
     public class Program
     {
-        public DiscordClient Client { get; set; }
-        public CommandsNextExtension Commands { get; set; }
-        public VoiceNextExtension Voice { get; set; }
-        public string token { get; set; }
+        private DiscordClient Client { get; set; }
+        private CommandsNextExtension Commands { get; set; }
+        private VoiceNextExtension Voice { get; set; }
+        private string Token { get; set; }
+        private JsonSettings JsonSettings { get; set; }
 
         public static void Main(string[] args)
         {
             new Program().RunBotAsync(args).GetAwaiter().GetResult();
         }
 
-        public DiscordConfiguration GetDiscordConfiguration()
+        private async Task RunBotAsync(string[] args)
         {
-            var cfg = new DiscordConfiguration
-            {
-                Token = token,
-                TokenType = TokenType.Bot,
+            JsonSettings = new JsonSettings();
+            if (!SetToken()) return;
 
+            ClientEvents clientEve = new ClientEvents();
+            CommandEvents commandEve = new CommandEvents();
+            this.Client = new DiscordClient(GetDiscordConfiguration());
+            this.Client.Ready += clientEve.Client_Ready;
+            this.Client.GuildAvailable += clientEve.Client_GuildAvailable;
+            this.Client.ClientErrored += clientEve.Client_ClientError;
+            this.Commands = this.Client.UseCommandsNext(GetCommandsNextConfiguration());
+            this.Commands.CommandExecuted += commandEve.Commands_CommandExecuted;
+            this.Commands.CommandErrored += commandEve.Commands_CommandErrored;
+            this.Commands.RegisterCommands<VoiceCommands>();
+            this.Voice = this.Client.UseVoiceNext();
+            await this.Client.ConnectAsync(GetBotPlayingMsg());
+
+            ConnectToLavalink();
+            await Task.Delay(-1);
+        }
+
+        private CommandsNextConfiguration GetCommandsNextConfiguration()
+        {
+            return new CommandsNextConfiguration
+            {
+                StringPrefixes = new[] {JsonSettings.LoadedSettings.CommandPrefix},
+                EnableDms = true,
+                EnableMentionPrefix = true
+            };
+        }
+
+        private DiscordConfiguration GetDiscordConfiguration()
+        {
+            return new DiscordConfiguration
+            {
+                Token = Token,
+                TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 MinimumLogLevel = LogLevel.Debug,
             };
-            return cfg;
         }
 
-        public async void SetDiscordPlaying(string hash, string prefix)
+        private bool SetToken()
         {
-            DiscordActivity activity = new DiscordActivity();
-            activity.Name = $"{prefix}help | {hash}";
-            await this.Client.UpdateStatusAsync(activity);
-        }
-
-        public async Task RunBotAsync(string[] args)
-        {
-            token = Environment.GetEnvironmentVariable("ALADAR_BOT");
-            if (token == "")
+            Token = Environment.GetEnvironmentVariable("ALADAR_BOT");
+            if (Token == "")
             {
                 Console.WriteLine("Empty token, set an environment variable ALADAR_BOT");
-                return;
+                return false;
             }
 
-            Console.WriteLine($"api token: {token}");
-            JsonSettings Settings = new JsonSettings();
-            ClientEvents ClientEve = new ClientEvents();
-            CommandEvents CommandEve = new CommandEvents();
+            Console.WriteLine($"api token: {Token}");
+            return true;
+        }
 
-            this.Client = new DiscordClient(GetDiscordConfiguration());
-
-            this.Client.Ready += ClientEve.Client_Ready;
-            this.Client.GuildAvailable += ClientEve.Client_GuildAvailable;
-            this.Client.ClientErrored += ClientEve.Client_ClientError;
-
-            var ccfg = new CommandsNextConfiguration
+        private DiscordActivity GetBotPlayingMsg()
+        {
+            var hash = ProcessRunner.RunProcess("git", "rev-parse HEAD");
+            var activity = new DiscordActivity
             {
-                StringPrefixes = new[] {Settings.LoadedSettings.CommandPrefix},
-
-                EnableDms = true,
-
-                EnableMentionPrefix = true
+                Name = $"{JsonSettings.LoadedSettings.CommandPrefix}help | {hash.Substring(0, 7)}"
             };
+            return activity;
+        }
 
-            this.Commands = this.Client.UseCommandsNext(ccfg);
-
-            this.Commands.CommandExecuted += CommandEve.Commands_CommandExecuted;
-            this.Commands.CommandErrored += CommandEve.Commands_CommandErrored;
-
-            this.Commands.RegisterCommands<VoiceCommands>();
-
-            this.Voice = this.Client.UseVoiceNext();
-
-            await this.Client.ConnectAsync();
-            
+        private async void ConnectToLavalink()
+        {
             var endpoint = new ConnectionEndpoint
             {
-                Hostname = Settings.LoadedSettings.LavalinkAddr,
+                Hostname = JsonSettings.LoadedSettings.LavalinkAddr,
                 Port = 2333
             };
-
             var lavalinkConfig = new LavalinkConfiguration
             {
                 Password = "youshallnotpass",
@@ -97,12 +105,7 @@ namespace ProjektDjAladar
             };
 
             var lavalink = Client.UseLavalink();
-
             await lavalink.ConnectAsync(lavalinkConfig);
-            string hash = ProcessRunner.RunProcess("git", "rev-parse HEAD");
-            SetDiscordPlaying(hash?.Substring(0, 7), Settings.LoadedSettings.CommandPrefix);
-
-            await Task.Delay(-1);
         }
     }
 }

@@ -338,4 +338,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-/Lavalink/logs/spring.log*
+/Lavalink/logs
