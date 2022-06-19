@@ -13,7 +13,7 @@ namespace ProjektDjAladar
 {
     public class VoiceCommands : BaseCommandModule
     {
-        private static readonly string[] Units = {"", "ki", "Mi", "Gi"};
+        private static readonly string[] Units = { "", "ki", "Mi", "Gi" };
         private readonly Queue _trackQueue = new();
         private bool _loop;
 
@@ -71,14 +71,14 @@ namespace ProjektDjAladar
             [RemainingText, Description("Full path to the file to play.")]
             string search
         )
+
         {
-            // Not sure how to better check if already connected to voice channel
+
             if (ctx.Client.GetLavalink().ConnectedNodes.Values.First()
                 .GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
             {
                 await ctx.RespondAsync("Not connected, joining");
-                var task = Join(ctx);
-                task.Wait(2000);
+                await Join(ctx);
             }
 
             var audio = await FillAudio(ctx);
@@ -101,7 +101,7 @@ namespace ProjektDjAladar
             {
                 if (audio.Conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest) _trackQueue.Dequeue();
+                    var request = (TrackRequest)_trackQueue.Dequeue();
                     if (_loop)
                     {
                         _trackQueue.Enqueue(request);
@@ -165,7 +165,7 @@ namespace ProjektDjAladar
             {
                 if (audio.Conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest) _trackQueue.Dequeue();
+                    var request = (TrackRequest)_trackQueue.Dequeue();
                     await audio.Conn.PlayPartialAsync(request.GetRequestTrack(), start, stop);
                     await ctx.RespondAsync($"Now playing {track.Title}!");
                     audio.Conn.PlaybackFinished += Conn_PlaybackFinished;
@@ -436,7 +436,7 @@ namespace ProjektDjAladar
 
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
-            var request = (TrackRequest) _trackQueue.Dequeue();
+            var request = (TrackRequest)_trackQueue.Dequeue();
             if (_loop)
             {
                 _trackQueue.Enqueue(request);
