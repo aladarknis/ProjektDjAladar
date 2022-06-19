@@ -48,7 +48,7 @@ namespace ProjektDjAladar
 
 
         [Command("leave"), Description("Leaves a voice channel.")]
-        public async Task Leave(CommandContext ctx)
+        public static async Task Leave(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             var vnext = await CheckAndGetVNext(ctx);
@@ -66,16 +66,9 @@ namespace ProjektDjAladar
         }
 
         [Command("play"), Description("Plays an audio file from YouTube")]
-        public async Task Play(
-            CommandContext ctx,
-            [RemainingText, Description("Full path to the file to play.")]
-            string search
-        )
-
+        public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
         {
-
-            if (ctx.Member != null && ctx.Client.GetLavalink().ConnectedNodes.Values.First()
-                    .GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
+            if (ctx.Member != null && ctx.Client.GetLavalink().ConnectedNodes.Values.First().GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
             {
                 await ctx.RespondAsync("Not connected, joining");
                 await Join(ctx);
@@ -173,7 +166,7 @@ namespace ProjektDjAladar
         }
 
         [Command("skip"), Description("Skips song in playing")]
-        public async Task Skip(CommandContext ctx)
+        public static async Task Skip(CommandContext ctx)
         {
             var vnext = await CheckAndGetVNext(ctx);
             if (vnext == null) return;
@@ -183,7 +176,7 @@ namespace ProjektDjAladar
         }
 
         [Command("stop"), Description("Stops playing audio")]
-        public async Task Stop(CommandContext ctx)
+        public static async Task Stop(CommandContext ctx)
         {
             var vnext = await CheckAndGetVNext(ctx);
             if (vnext == null) return;
@@ -200,7 +193,7 @@ namespace ProjektDjAladar
         }
 
         [Command("pause"), Description("Stops playing audio")]
-        public async Task Pause(CommandContext ctx)
+        public static async Task Pause(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -212,7 +205,7 @@ namespace ProjektDjAladar
         }
 
         [Command("resume"), Description("Stops playing audio")]
-        public async Task Resume(CommandContext ctx)
+        public static async Task Resume(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -224,7 +217,7 @@ namespace ProjektDjAladar
         }
 
         [Command("np"), Description("Shows what's being currently played.")]
-        public async Task NowPlayingAsync(CommandContext ctx)
+        public static async Task NowPlayingAsync(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -271,7 +264,7 @@ namespace ProjektDjAladar
         }
 
         [Command("seek"), Description("Seeks in the current track.")]
-        public async Task SeekAsync(CommandContext ctx, TimeSpan position)
+        public static async Task SeekAsync(CommandContext ctx, TimeSpan position)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -297,7 +290,7 @@ namespace ProjektDjAladar
         }
 
         [Command("volume"), Description("Changes playback volume.")]
-        public async Task VolumeAsync(CommandContext ctx, int volume)
+        public static async Task VolumeAsync(CommandContext ctx, int volume)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -307,9 +300,8 @@ namespace ProjektDjAladar
             }
         }
 
-
         [Command("eqreset"), Description("Sets or resets equalizer settings.")]
-        public async Task EqualizerAsync(CommandContext ctx)
+        public static async Task EqualizerAsync(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -320,7 +312,7 @@ namespace ProjektDjAladar
         }
 
         [Command("eq"), Description("Sets or resets equalizer settings.")]
-        public async Task EqualizerAsync(CommandContext ctx, int band, float gain)
+        public static async Task EqualizerAsync(CommandContext ctx, int band, float gain)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -331,7 +323,7 @@ namespace ProjektDjAladar
         }
 
         [Command("stats"), Description("Displays Lavalink statistics.")]
-        public async Task StatsAsync(CommandContext ctx)
+        public static async Task StatsAsync(CommandContext ctx)
         {
             var audio = await FillAudio(ctx);
             if (await ConnectionCheck(ctx, audio.Conn))
@@ -408,7 +400,7 @@ namespace ProjektDjAladar
             return vnext;
         }
 
-        private async Task<Audio> FillAudio(CommandContext ctx)
+        private static async Task<Audio> FillAudio(CommandContext ctx)
         {
             var conn = new Audio
             {
