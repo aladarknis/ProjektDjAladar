@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.VoiceNext;
 using DSharpPlus.Lavalink;
-using System.Linq;
-using System.Text;
-using System.Collections;
 using DSharpPlus.Lavalink.EventArgs;
+using DSharpPlus.VoiceNext;
 
 namespace ProjektDjAladar
 {
@@ -74,8 +74,8 @@ namespace ProjektDjAladar
 
         {
 
-            if (ctx.Client.GetLavalink().ConnectedNodes.Values.First()
-                .GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
+            if (ctx.Member != null && ctx.Client.GetLavalink().ConnectedNodes.Values.First()
+                    .GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
             {
                 await ctx.RespondAsync("Not connected, joining");
                 await Join(ctx);
@@ -85,8 +85,7 @@ namespace ProjektDjAladar
             var uri = new Uri(search);
             var loadResult = await audio.Node.Rest.GetTracksAsync(uri);
 
-            if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
-                || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+            if (loadResult.LoadResultType is LavalinkLoadResultType.LoadFailed or LavalinkLoadResultType.NoMatches)
             {
                 await ctx.RespondAsync($"Track search failed for {search}.");
                 return;
@@ -219,7 +218,7 @@ namespace ProjektDjAladar
             if (await ConnectionCheck(ctx, audio.Conn))
             {
                 if (await AnyTracksLoaded(ctx, audio.Conn)) return;
-                await ctx.RespondAsync($"Resumed playing!");
+                await ctx.RespondAsync("Resumed playing!");
                 await audio.Conn.ResumeAsync();
             }
         }
@@ -289,11 +288,11 @@ namespace ProjektDjAladar
             _loop = !_loop;
             if (_loop)
             {
-                await ctx.RespondAsync($"Loop enabled");
+                await ctx.RespondAsync("Loop enabled");
             }
             else
             {
-                await ctx.RespondAsync($"Loop disabled");
+                await ctx.RespondAsync("Loop disabled");
             }
         }
 
@@ -360,7 +359,7 @@ namespace ProjektDjAladar
         }
 
         [Command("vymitani"), Description("Negre seber se a vypadni!")]
-        public async Task vymitaniAsync(CommandContext ctx)
+        public async Task VymitaniAsync(CommandContext ctx)
         {
             await ctx.RespondAsync("Negre seber se a vypadni!");
             await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
@@ -381,7 +380,7 @@ namespace ProjektDjAladar
 
         private static async Task<bool> ConnectionCheck(CommandContext ctx, LavalinkGuildConnection conn)
         {
-            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+            if (ctx.Member != null && (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null))
             {
                 await ctx.RespondAsync("You are not in a voice channel.");
                 return false;
@@ -422,7 +421,7 @@ namespace ProjektDjAladar
             }
 
             conn.Node = conn.Lava.ConnectedNodes.Values.First();
-            conn.Conn = conn.Node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+            if (ctx.Member != null) conn.Conn = conn.Node.GetGuildConnection(ctx.Member.VoiceState.Guild);
             return conn;
         }
 

@@ -8,7 +8,6 @@ using DSharpPlus.Net;
 using DSharpPlus.VoiceNext;
 using Microsoft.Extensions.Logging;
 
-
 namespace ProjektDjAladar
 {
     public class Program
@@ -29,18 +28,18 @@ namespace ProjektDjAladar
             JsonSettings = new JsonSettings();
             if (!SetToken()) return;
 
-            ClientEvents clientEve = new ClientEvents();
-            CommandEvents commandEve = new CommandEvents();
-            this.Client = new DiscordClient(GetDiscordConfiguration());
-            this.Client.Ready += clientEve.Client_Ready;
-            this.Client.GuildAvailable += clientEve.Client_GuildAvailable;
-            this.Client.ClientErrored += clientEve.Client_ClientError;
-            this.Commands = this.Client.UseCommandsNext(GetCommandsNextConfiguration());
-            this.Commands.CommandExecuted += commandEve.Commands_CommandExecuted;
-            this.Commands.CommandErrored += commandEve.Commands_CommandErrored;
-            this.Commands.RegisterCommands<VoiceCommands>();
-            this.Voice = this.Client.UseVoiceNext();
-            await this.Client.ConnectAsync(GetBotPlayingMsg());
+            var clientEve = new ClientEvents();
+            var commandEve = new CommandEvents();
+            Client = new DiscordClient(GetDiscordConfiguration());
+            Client.Ready += clientEve.Client_Ready;
+            Client.GuildAvailable += clientEve.Client_GuildAvailable;
+            Client.ClientErrored += clientEve.Client_ClientError;
+            Commands = Client.UseCommandsNext(GetCommandsNextConfiguration());
+            Commands.CommandExecuted += commandEve.Commands_CommandExecuted;
+            Commands.CommandErrored += commandEve.Commands_CommandErrored;
+            Commands.RegisterCommands<VoiceCommands>();
+            Voice = Client.UseVoiceNext();
+            await Client.ConnectAsync(GetBotPlayingMsg());
 
             ConnectToLavalink();
             await Task.Delay(-1);
