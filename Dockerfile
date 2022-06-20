@@ -14,6 +14,6 @@ COPY ProjektDjAladar.sln ./
 RUN dotnet publish -c Release -r linux-x64
 
 # Start bot
-WORKDIR src/ProjektDjAladar/bin/Release/net5.0/linux-x64/publish
+WORKDIR src/ProjektDjAladar/bin/Release/net6.0/linux-x64/publish
 CMD ["./ProjektDjAladar"]
 
