@@ -2,7 +2,7 @@ using DSharpPlus.Lavalink;
 
 namespace ProjektDjAladar
 {
-    struct Audio
+    internal struct Audio
     {
         public LavalinkExtension Lava;
         public LavalinkNodeConnection Node;

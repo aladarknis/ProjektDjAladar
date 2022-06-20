@@ -1,13 +1,13 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using System;
+using System.Threading.Tasks;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 
 namespace ProjektDjAladar
 {
-    class CommandEvents : Event
+    internal class CommandEvents : Event
     {
         public Task Commands_CommandExecuted(CommandsNextExtension sender, CommandExecutionEventArgs e)
         {

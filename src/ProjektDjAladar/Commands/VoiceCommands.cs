@@ -1,19 +1,20 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.VoiceNext;
 using DSharpPlus.Lavalink;
-using System.Linq;
-using System.Text;
-using System.Collections;
 using DSharpPlus.Lavalink.EventArgs;
+using DSharpPlus.VoiceNext;
+
 
 namespace ProjektDjAladar
 {
     public class VoiceCommands : BaseCommandModule
     {
-        private static readonly string[] Units = {"", "ki", "Mi", "Gi"};
+        private static readonly string[] Units = { "", "ki", "Mi", "Gi" };
         private readonly Queue _trackQueue = new();
         private bool _loop;
 
@@ -41,8 +42,9 @@ namespace ProjektDjAladar
 
             var channel = vstat.Channel;
             var audio = await FillAudio(ctx);
+
             await audio.Node.ConnectAsync(channel);
-            await vnext.ConnectAsync(channel);
+            await Task.Factory.StartNew(() => vnext.ConnectAsync(channel));
             await ctx.RespondAsync($"Connected b to `{channel.Name}`");
         }
 
@@ -66,42 +68,34 @@ namespace ProjektDjAladar
         }
 
         [Command("play"), Description("Plays an audio file from YouTube")]
-        public async Task Play(
-            CommandContext ctx,
-            [RemainingText, Description("Full path to the file to play.")]
-            string search
-        )
+        public async Task Play(CommandContext ctx, [RemainingText, Description("Full path to the file to play.")] string search)
         {
-            // Not sure how to better check if already connected to voice channel
-            if (ctx.Client.GetLavalink().ConnectedNodes.Values.First()
-                .GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
+            if (ctx.Member != null && ctx.Client.GetLavalink().ConnectedNodes.Values.First().GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
             {
                 await ctx.RespondAsync("Not connected, joining");
-                var task = Join(ctx);
-                task.Wait(2000);
+                await Join(ctx).WaitAsync(TimeSpan.FromSeconds(30));
             }
 
             var audio = await FillAudio(ctx);
             var uri = new Uri(search);
             var loadResult = await audio.Node.Rest.GetTracksAsync(uri);
 
-            if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
-                || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
+            if (loadResult.LoadResultType is LavalinkLoadResultType.LoadFailed or LavalinkLoadResultType.NoMatches)
             {
                 await ctx.RespondAsync($"Track search failed for {search}.");
                 return;
             }
 
-            foreach (var track in loadResult.Tracks)
-            {
-                _trackQueue.Enqueue(new TrackRequest(ctx, track));
-            }
-
             if (await ConnectionCheck(ctx, audio.Conn))
             {
+                foreach (var track in loadResult.Tracks)
+                {
+                    _trackQueue.Enqueue(new TrackRequest(ctx, track));
+                }
+
                 if (audio.Conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest) _trackQueue.Dequeue();
+                    var request = (TrackRequest)_trackQueue.Dequeue();
                     if (_loop)
                     {
                         _trackQueue.Enqueue(request);
@@ -165,7 +159,7 @@ namespace ProjektDjAladar
             {
                 if (audio.Conn.CurrentState.CurrentTrack == null)
                 {
-                    var request = (TrackRequest) _trackQueue.Dequeue();
+                    var request = (TrackRequest)_trackQueue.Dequeue();
                     await audio.Conn.PlayPartialAsync(request.GetRequestTrack(), start, stop);
                     await ctx.RespondAsync($"Now playing {track.Title}!");
                     audio.Conn.PlaybackFinished += Conn_PlaybackFinished;
@@ -219,7 +213,7 @@ namespace ProjektDjAladar
             if (await ConnectionCheck(ctx, audio.Conn))
             {
                 if (await AnyTracksLoaded(ctx, audio.Conn)) return;
-                await ctx.RespondAsync($"Resumed playing!");
+                await ctx.RespondAsync("Resumed playing!");
                 await audio.Conn.ResumeAsync();
             }
         }
@@ -289,11 +283,11 @@ namespace ProjektDjAladar
             _loop = !_loop;
             if (_loop)
             {
-                await ctx.RespondAsync($"Loop enabled");
+                await ctx.RespondAsync("Loop enabled");
             }
             else
             {
-                await ctx.RespondAsync($"Loop disabled");
+                await ctx.RespondAsync("Loop disabled");
             }
         }
 
@@ -307,7 +301,6 @@ namespace ProjektDjAladar
                 await ctx.RespondAsync($"Volume set to {volume}%.").ConfigureAwait(false);
             }
         }
-
 
         [Command("eqreset"), Description("Sets or resets equalizer settings.")]
         public async Task EqualizerAsync(CommandContext ctx)
@@ -360,13 +353,13 @@ namespace ProjektDjAladar
         }
 
         [Command("vymitani"), Description("Negre seber se a vypadni!")]
-        public async Task vymitaniAsync(CommandContext ctx)
+        public async Task VymitaniAsync(CommandContext ctx)
         {
             await ctx.RespondAsync("Negre seber se a vypadni!");
             await Play(ctx, new JsonSettings().LoadedSettings.VymitaniUrl);
         }
 
-        private static string SizeToString(long l)
+        private string SizeToString(long l)
         {
             double d = l;
             var u = 0;
@@ -379,9 +372,9 @@ namespace ProjektDjAladar
             return $"{d:#,##0.00} {Units[u]}B";
         }
 
-        private static async Task<bool> ConnectionCheck(CommandContext ctx, LavalinkGuildConnection conn)
+        private async Task<bool> ConnectionCheck(CommandContext ctx, LavalinkGuildConnection conn)
         {
-            if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+            if (ctx.Member != null && (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null))
             {
                 await ctx.RespondAsync("You are not in a voice channel.");
                 return false;
@@ -396,7 +389,7 @@ namespace ProjektDjAladar
             return true;
         }
 
-        private static async Task<VoiceNextExtension> CheckAndGetVNext(CommandContext ctx)
+        private async Task<VoiceNextExtension> CheckAndGetVNext(CommandContext ctx)
         {
             // Check if VNext is enabled
             var vnext = ctx.Client.GetVoiceNext();
@@ -422,7 +415,7 @@ namespace ProjektDjAladar
             }
 
             conn.Node = conn.Lava.ConnectedNodes.Values.First();
-            conn.Conn = conn.Node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+            if (ctx.Member != null) conn.Conn = conn.Node.GetGuildConnection(ctx.Member.VoiceState.Guild);
             return conn;
         }
 
@@ -436,7 +429,7 @@ namespace ProjektDjAladar
 
         private async Task PlayFromQueue(LavalinkGuildConnection conn)
         {
-            var request = (TrackRequest) _trackQueue.Dequeue();
+            var request = (TrackRequest)_trackQueue.Dequeue();
             if (_loop)
             {
                 _trackQueue.Enqueue(request);
@@ -457,7 +450,7 @@ namespace ProjektDjAladar
             }
         }
 
-        private static async Task<bool> AnyTracksLoaded(CommandContext ctx, LavalinkGuildConnection conn)
+        private async Task<bool> AnyTracksLoaded(CommandContext ctx, LavalinkGuildConnection conn)
         {
             if (conn.CurrentState.CurrentTrack == null)
             {

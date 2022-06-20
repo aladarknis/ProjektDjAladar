@@ -1,12 +1,12 @@
-﻿using Newtonsoft.Json;
-using System.IO;
+﻿using System.IO;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace ProjektDjAladar
 {
     public class JsonSettings
     {
-        private string JsonPath;
+        private readonly string _jsonPath;
 
         public struct ConfigJson
         {
@@ -22,20 +22,20 @@ namespace ProjektDjAladar
 
         public JsonSettings()
         {
-            JsonPath = "config.json";
+            _jsonPath = "config.json";
             LoadSettings();
         }
 
         public JsonSettings(string path)
         {
-            JsonPath = path;
+            _jsonPath = path;
             LoadSettings();
         }
 
         private void LoadSettings()
         {
-            var json = "";
-            using (var fs = File.OpenRead(JsonPath))
+            string json;
+            using (var fs = File.OpenRead(_jsonPath))
             using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
                 json = sr.ReadToEnd();
             LoadedSettings = JsonConvert.DeserializeObject<ConfigJson>(json);
