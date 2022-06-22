@@ -45,7 +45,7 @@ namespace ProjektDjAladar
 
             await audio.Node.ConnectAsync(channel);
             await Task.Factory.StartNew(() => vnext.ConnectAsync(channel));
-            await ctx.RespondAsync($"Connected b to `{channel.Name}`");
+            await ctx.RespondAsync($"Connected to `{channel.Name}`");
         }
 
 
@@ -72,7 +72,7 @@ namespace ProjektDjAladar
         {
             if (ctx.Member != null && ctx.Client.GetLavalink().ConnectedNodes.Values.First().GetGuildConnection(ctx.Member.VoiceState.Guild) == null)
             {
-                await ctx.RespondAsync("Not connected, joining");
+                await ctx.RespondAsync("Not connected, joining...");
                 await Join(ctx).WaitAsync(TimeSpan.FromSeconds(30));
             }
 
@@ -101,14 +101,17 @@ namespace ProjektDjAladar
                         _trackQueue.Enqueue(request);
                     }
 
-                    await audio.Conn.PlayAsync(request?.GetRequestTrack());
-                    await ctx.RespondAsync($"Now playing {request?.GetRequestTrack().Title}!");
+                    var trackLenght = request?.GetRequestTrack().Length;
+
+                    await ctx.RespondAsync($"Now playing {request?.GetRequestTrack().Title}! Lenght: " + trackLenght + ". Expected end: " + (DateTime.Now).Add((TimeSpan)trackLenght).ToString("HH:mm:ss") + ".");
+
+                    await Task.Factory.StartNew(() => audio.Conn.PlayAsync(request?.GetRequestTrack()));
                     audio.Conn.PlaybackFinished += Conn_PlaybackFinished;
                 }
             }
         }
 
-        [Command("forceplay"), Description("Add song to the top of the que")]
+        [Command("forceplay"), Description("Add song to the top of the queue")]
         public async Task ForcePlay(CommandContext ctx,
             [RemainingText, Description("Full path to the file to play.")]
             string search)
@@ -126,6 +129,7 @@ namespace ProjektDjAladar
 
             var oldQueue = _trackQueue.ToArray();
             _trackQueue.Clear();
+
             foreach (var track in loadResult.Tracks)
             {
                 _trackQueue.Enqueue(new TrackRequest(ctx, track));
@@ -437,14 +441,15 @@ namespace ProjektDjAladar
 
             var track = request?.GetRequestTrack();
             var ctx = request?.GetRequestCtx();
+            var trackLenght = track.Length;
             if (conn.CurrentState.CurrentTrack == null)
             {
-                await conn.PlayAsync(track);
-
                 if (!_loop)
                 {
-                    await ctx.RespondAsync($"Now playing {track?.Title}!");
+                    await ctx.RespondAsync($"Now playing {track.Title}! Lenght: " + trackLenght + ". Expected end: " + (DateTime.Now).Add((TimeSpan)trackLenght).ToString("HH:mm:ss") + ".");
                 }
+
+                await Task.Factory.StartNew(() => conn.PlayAsync(track));
 
                 conn.PlaybackFinished += Conn_PlaybackFinished;
             }
