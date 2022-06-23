@@ -20,7 +20,19 @@ namespace ProjektDjAladar
 
         public static void Main(string[] args)
         {
-            new Program().RunBotAsync(args).GetAwaiter().GetResult();
+            for (int i = 0; i < 5; i++)
+            {
+                try
+                {
+                    new Program().RunBotAsync(args).GetAwaiter().GetResult();
+                }
+
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e);
+                }
+            }
         }
 
         private async Task RunBotAsync(string[] args)
@@ -49,7 +61,7 @@ namespace ProjektDjAladar
         {
             return new CommandsNextConfiguration
             {
-                StringPrefixes = new[] {JsonSettings.LoadedSettings.CommandPrefix},
+                StringPrefixes = new[] { JsonSettings.LoadedSettings.CommandPrefix },
                 EnableDms = true,
                 EnableMentionPrefix = true
             };
