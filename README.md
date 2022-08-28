@@ -15,4 +15,4 @@
 - Make sure you have installed docker engine ([guide here](https://docs.docker.com/engine/install/)) and docker
 compose ([guide here](https://docs.docker.com/compose/install/))
 - To build and start the docker containers run: `$ ./build.sh`
-- An environmental variable `ALADAR_BOT` has to be set to the bot token string 
+- Create `.env` file following the template `.env.example` and set an environmental variable `ALADAR_BOT` to the bot token string 

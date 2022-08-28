@@ -340,3 +340,5 @@ ASALocalRun/
 healthchecksdb
 /Lavalink/logs
 /src/ProjektDjAladar/Properties
+
+.env
