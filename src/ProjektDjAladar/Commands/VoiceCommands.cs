@@ -188,6 +188,7 @@ namespace ProjektDjAladar
             if (vnext == null) return;
             var audio = await FillAudio(ctx);
             await audio.Conn.StopAsync();
+            _trackQueue.Clear();
             await ctx.Message.RespondAsync("Stopped playing!");
         }
 
